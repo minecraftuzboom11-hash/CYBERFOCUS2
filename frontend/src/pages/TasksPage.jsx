@@ -225,7 +225,7 @@ const TasksPage = () => {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="glass-card p-6 w-full max-w-lg"
+                className="glass-card p-6 w-full max-w-lg relative z-[60]"
                 onClick={(e) => e.stopPropagation()}
                 data-testid="create-task-modal"
               >
