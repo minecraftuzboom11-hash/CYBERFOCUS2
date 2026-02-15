@@ -150,6 +150,9 @@ function App() {
             )}
           </AnimatePresence>
           
+          {/* Music Player - only show when logged in */}
+          {user && <MusicPlayer />}
+          
           <Toaster 
             theme="dark" 
             position="top-right"
