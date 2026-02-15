@@ -94,7 +94,7 @@ class CyberFocusAPITester:
         timestamp = datetime.now().strftime('%H%M%S')
         test_user = {
             "username": f"testuser_{timestamp}",
-            "email": f"test_{timestamp}@cyberfocus.test",
+            "email": f"test_{timestamp}@example.com",
             "password": "TestPass123!"
         }
 
