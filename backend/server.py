@@ -787,7 +787,8 @@ async def create_news(news: NewsCreate, admin: dict = Depends(verify_admin)):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.news.insert_one(news_doc)
-    return news_doc
+    # Return clean document without _id
+    return {k: v for k, v in news_doc.items() if k != "_id"}
 
 @api_router.get("/admin/news")
 async def get_all_news(admin: dict = Depends(verify_admin)):
