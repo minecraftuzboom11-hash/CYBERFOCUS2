@@ -983,7 +983,8 @@ async def add_music_track(track: MusicTrackCreate, admin: dict = Depends(verify_
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.music_tracks.insert_one(track_doc)
-    return track_doc
+    # Return clean document without _id
+    return {k: v for k, v in track_doc.items() if k != "_id"}
 
 @api_router.get("/admin/music")
 async def get_all_music_admin(admin: dict = Depends(verify_admin)):
