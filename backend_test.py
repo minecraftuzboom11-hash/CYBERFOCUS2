@@ -1,0 +1,361 @@
+#!/usr/bin/env python3
+"""
+CyberFocus Backend API Testing Suite
+Tests all API endpoints for the gamified productivity app
+"""
+
+import requests
+import sys
+import json
+from datetime import datetime
+from typing import Dict, Any, Optional
+
+class CyberFocusAPITester:
+    def __init__(self, base_url="https://modern-stack-app-3.preview.emergentagent.com/api"):
+        self.base_url = base_url
+        self.token = None
+        self.user_id = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.test_results = []
+
+    def log_test(self, name: str, success: bool, details: str = "", response_data: Any = None):
+        """Log test result"""
+        self.tests_run += 1
+        if success:
+            self.tests_passed += 1
+        
+        result = {
+            "test_name": name,
+            "success": success,
+            "details": details,
+            "response_data": response_data,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} - {name}")
+        if details:
+            print(f"    {details}")
+        if not success and response_data:
+            print(f"    Response: {response_data}")
+
+    def make_request(self, method: str, endpoint: str, data: Dict = None, expected_status: int = 200) -> tuple:
+        """Make HTTP request and return success status and response"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = {'Content-Type': 'application/json'}
+        
+        if self.token:
+            headers['Authorization'] = f'Bearer {self.token}'
+
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=30)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=30)
+            elif method == 'PATCH':
+                response = requests.patch(url, json=data, headers=headers, timeout=30)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=30)
+            else:
+                return False, {"error": f"Unsupported method: {method}"}
+
+            success = response.status_code == expected_status
+            try:
+                response_data = response.json()
+            except:
+                response_data = {"status_code": response.status_code, "text": response.text}
+
+            return success, response_data
+
+        except requests.exceptions.RequestException as e:
+            return False, {"error": str(e)}
+
+    def test_health_endpoints(self):
+        """Test basic health and data endpoints"""
+        print("\n🔍 Testing Health Endpoints...")
+        
+        # Test health endpoint
+        success, data = self.make_request('GET', 'health')
+        self.log_test("Health Check", success, 
+                     f"Status: {data.get('status', 'unknown')}" if success else f"Error: {data}")
+        
+        # Test data endpoint
+        success, data = self.make_request('GET', 'data')
+        self.log_test("Data Endpoint", success,
+                     f"Message: {data.get('message', 'unknown')}" if success else f"Error: {data}")
+
+    def test_auth_flow(self):
+        """Test authentication endpoints"""
+        print("\n🔍 Testing Authentication...")
+        
+        # Generate unique test user
+        timestamp = datetime.now().strftime('%H%M%S')
+        test_user = {
+            "username": f"testuser_{timestamp}",
+            "email": f"test_{timestamp}@cyberfocus.test",
+            "password": "TestPass123!"
+        }
+
+        # Test user registration
+        success, data = self.make_request('POST', 'auth/register', test_user, 200)
+        if success and 'token' in data:
+            self.token = data['token']
+            self.user_id = data['user']['id']
+            self.log_test("User Registration", True, f"User ID: {self.user_id}")
+        else:
+            self.log_test("User Registration", False, "Failed to register user", data)
+            return False
+
+        # Test get current user
+        success, data = self.make_request('GET', 'auth/me')
+        self.log_test("Get Current User", success,
+                     f"Username: {data.get('username', 'unknown')}" if success else f"Error: {data}")
+
+        # Test login with same credentials
+        login_data = {"email": test_user["email"], "password": test_user["password"]}
+        success, data = self.make_request('POST', 'auth/login', login_data, 200)
+        if success and 'token' in data:
+            self.token = data['token']  # Update token
+            self.log_test("User Login", True, f"New token received")
+        else:
+            self.log_test("User Login", False, "Failed to login", data)
+
+        return True
+
+    def test_task_management(self):
+        """Test task CRUD operations"""
+        print("\n🔍 Testing Task Management...")
+        
+        if not self.token:
+            self.log_test("Task Tests", False, "No authentication token available")
+            return
+
+        # Create a test task
+        task_data = {
+            "title": "Test Task for API Testing",
+            "description": "This is a test task created by the API tester",
+            "skill_tree": "Work",
+            "difficulty": 3,
+            "estimated_minutes": 45
+        }
+
+        success, data = self.make_request('POST', 'tasks', task_data, 200)
+        task_id = None
+        if success and 'id' in data:
+            task_id = data['id']
+            self.log_test("Create Task", True, f"Task ID: {task_id}, XP Reward: {data.get('xp_reward', 0)}")
+        else:
+            self.log_test("Create Task", False, "Failed to create task", data)
+            return
+
+        # Get all tasks
+        success, data = self.make_request('GET', 'tasks')
+        self.log_test("Get All Tasks", success,
+                     f"Found {len(data)} tasks" if success and isinstance(data, list) else f"Error: {data}")
+
+        # Get pending tasks
+        success, data = self.make_request('GET', 'tasks?completed=false')
+        self.log_test("Get Pending Tasks", success,
+                     f"Found {len(data)} pending tasks" if success and isinstance(data, list) else f"Error: {data}")
+
+        # Complete the task
+        if task_id:
+            success, data = self.make_request('PATCH', f'tasks/{task_id}', {"completed": True})
+            if success:
+                xp_earned = data.get('xp_reward', 0)
+                level_up = data.get('level_up', False)
+                self.log_test("Complete Task", True, 
+                             f"XP earned: {xp_earned}, Level up: {level_up}")
+            else:
+                self.log_test("Complete Task", False, "Failed to complete task", data)
+
+            # Delete the task
+            success, data = self.make_request('DELETE', f'tasks/{task_id}', expected_status=200)
+            self.log_test("Delete Task", success,
+                         "Task deleted successfully" if success else f"Error: {data}")
+
+    def test_boss_challenge(self):
+        """Test boss challenge functionality"""
+        print("\n🔍 Testing Boss Challenge...")
+        
+        if not self.token:
+            self.log_test("Boss Challenge Tests", False, "No authentication token available")
+            return
+
+        # Get today's boss challenge
+        success, data = self.make_request('GET', 'boss-challenge/today')
+        challenge_id = None
+        if success and 'id' in data:
+            challenge_id = data['id']
+            self.log_test("Get Boss Challenge", True, 
+                         f"Challenge: {data.get('challenge_text', 'unknown')[:50]}...")
+        else:
+            self.log_test("Get Boss Challenge", False, "Failed to get boss challenge", data)
+            return
+
+        # Complete boss challenge
+        if challenge_id:
+            success, data = self.make_request('POST', f'boss-challenge/{challenge_id}/complete')
+            if success:
+                xp_earned = data.get('xp_earned', 0)
+                level_up = data.get('level_up', False)
+                self.log_test("Complete Boss Challenge", True,
+                             f"XP earned: {xp_earned}, Level up: {level_up}")
+            else:
+                self.log_test("Complete Boss Challenge", False, "Failed to complete challenge", data)
+
+    def test_ai_coach(self):
+        """Test AI Coach functionality"""
+        print("\n🔍 Testing AI Coach...")
+        
+        if not self.token:
+            self.log_test("AI Coach Tests", False, "No authentication token available")
+            return
+
+        # Test chat with AI coach
+        chat_data = {"message": "Hello CyberCoach! How can I be more productive today?"}
+        success, data = self.make_request('POST', 'ai-coach/chat', chat_data)
+        if success and 'response' in data:
+            response_preview = data['response'][:100] + "..." if len(data['response']) > 100 else data['response']
+            self.log_test("AI Coach Chat", True, f"Response: {response_preview}")
+        else:
+            self.log_test("AI Coach Chat", False, "Failed to get AI response", data)
+
+        # Get chat history
+        success, data = self.make_request('GET', 'ai-coach/history')
+        self.log_test("AI Coach History", success,
+                     f"Found {len(data)} messages" if success and isinstance(data, list) else f"Error: {data}")
+
+    def test_focus_mode(self):
+        """Test Focus Mode functionality"""
+        print("\n🔍 Testing Focus Mode...")
+        
+        if not self.token:
+            self.log_test("Focus Mode Tests", False, "No authentication token available")
+            return
+
+        # Start focus session
+        session_data = {"duration_minutes": 25}
+        success, data = self.make_request('POST', 'focus/start', session_data)
+        session_id = None
+        if success and 'id' in data:
+            session_id = data['id']
+            self.log_test("Start Focus Session", True, f"Session ID: {session_id}")
+        else:
+            self.log_test("Start Focus Session", False, "Failed to start session", data)
+            return
+
+        # Complete focus session
+        if session_id:
+            success, data = self.make_request('POST', f'focus/{session_id}/complete')
+            if success:
+                xp_earned = data.get('xp_earned', 0)
+                level_up = data.get('level_up', False)
+                self.log_test("Complete Focus Session", True,
+                             f"XP earned: {xp_earned}, Level up: {level_up}")
+            else:
+                self.log_test("Complete Focus Session", False, "Failed to complete session", data)
+
+        # Get focus history
+        success, data = self.make_request('GET', 'focus/history')
+        self.log_test("Focus History", success,
+                     f"Found {len(data)} sessions" if success and isinstance(data, list) else f"Error: {data}")
+
+    def test_analytics(self):
+        """Test Analytics endpoints"""
+        print("\n🔍 Testing Analytics...")
+        
+        if not self.token:
+            self.log_test("Analytics Tests", False, "No authentication token available")
+            return
+
+        # Get dashboard analytics
+        success, data = self.make_request('GET', 'analytics/dashboard')
+        if success:
+            stats = f"Tasks: {data.get('total_tasks', 0)}, Level: {data.get('level', 0)}, Streak: {data.get('streak', 0)}"
+            self.log_test("Dashboard Analytics", True, stats)
+        else:
+            self.log_test("Dashboard Analytics", False, "Failed to get analytics", data)
+
+        # Get weekly analytics
+        success, data = self.make_request('GET', 'analytics/weekly')
+        self.log_test("Weekly Analytics", success,
+                     f"Found {len(data)} days of data" if success and isinstance(data, list) else f"Error: {data}")
+
+    def test_achievements(self):
+        """Test Achievements functionality"""
+        print("\n🔍 Testing Achievements...")
+        
+        if not self.token:
+            self.log_test("Achievements Tests", False, "No authentication token available")
+            return
+
+        # Get achievements
+        success, data = self.make_request('GET', 'achievements')
+        if success and isinstance(data, list):
+            unlocked = sum(1 for ach in data if ach.get('unlocked', False))
+            self.log_test("Get Achievements", True, f"Found {len(data)} achievements, {unlocked} unlocked")
+        else:
+            self.log_test("Get Achievements", False, "Failed to get achievements", data)
+
+    def run_all_tests(self):
+        """Run complete test suite"""
+        print("🚀 Starting CyberFocus API Test Suite")
+        print(f"🎯 Testing against: {self.base_url}")
+        print("=" * 60)
+
+        # Run all test categories
+        self.test_health_endpoints()
+        
+        if self.test_auth_flow():
+            self.test_task_management()
+            self.test_boss_challenge()
+            self.test_ai_coach()
+            self.test_focus_mode()
+            self.test_analytics()
+            self.test_achievements()
+        else:
+            print("\n❌ Authentication failed - skipping authenticated tests")
+
+        # Print summary
+        print("\n" + "=" * 60)
+        print("📊 TEST SUMMARY")
+        print("=" * 60)
+        print(f"Total Tests: {self.tests_run}")
+        print(f"Passed: {self.tests_passed}")
+        print(f"Failed: {self.tests_run - self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        # Show failed tests
+        failed_tests = [t for t in self.test_results if not t['success']]
+        if failed_tests:
+            print(f"\n❌ FAILED TESTS ({len(failed_tests)}):")
+            for test in failed_tests:
+                print(f"  - {test['test_name']}: {test['details']}")
+        
+        return self.tests_passed == self.tests_run
+
+def main():
+    """Main test runner"""
+    tester = CyberFocusAPITester()
+    success = tester.run_all_tests()
+    
+    # Save detailed results
+    with open('/app/test_reports/backend_api_results.json', 'w') as f:
+        json.dump({
+            'summary': {
+                'total_tests': tester.tests_run,
+                'passed': tester.tests_passed,
+                'failed': tester.tests_run - tester.tests_passed,
+                'success_rate': (tester.tests_passed/tester.tests_run*100) if tester.tests_run > 0 else 0
+            },
+            'results': tester.test_results,
+            'timestamp': datetime.now().isoformat()
+        }, indent=2)
+    
+    return 0 if success else 1
+
+if __name__ == "__main__":
+    sys.exit(main())
