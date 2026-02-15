@@ -270,6 +270,34 @@ const TasksPage = () => {
                 </div>
 
                 <form onSubmit={handleCreateTask} className="space-y-5">
+                  {/* AI Suggestion Section */}
+                  <div className="bg-[#FF0099]/10 border border-[#FF0099]/30 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles className="w-5 h-5 text-[#FF0099]" />
+                      <span className="font-bold text-[#FF0099]">AI Task Suggestion</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={aiContext}
+                        onChange={(e) => setAiContext(e.target.value)}
+                        className="flex-1 px-3 py-2 bg-black/50 border border-[#FF0099]/30 rounded-lg focus:border-[#FF0099] text-sm"
+                        placeholder="What do you want to work on? (e.g., Learn React hooks)"
+                        data-testid="ai-context-input"
+                      />
+                      <button
+                        type="button"
+                        onClick={suggestWithAI}
+                        disabled={aiSuggesting}
+                        className="px-4 py-2 bg-[#FF0099]/20 text-[#FF0099] rounded-lg hover:bg-[#FF0099]/30 transition-colors flex items-center gap-2"
+                        data-testid="ai-suggest-btn"
+                      >
+                        {aiSuggesting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                        Suggest
+                      </button>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium mb-2 text-[#a0a0b0]">
                       Task Title *
