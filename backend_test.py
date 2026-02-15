@@ -300,6 +300,208 @@ class CyberFocusAPITester:
         else:
             self.log_test("Get Achievements", False, "Failed to get achievements", data)
 
+    def test_admin_functionality(self):
+        """Test Admin Panel functionality"""
+        print("\n🔍 Testing Admin Panel...")
+        
+        # Test admin login
+        admin_credentials = {"username": "Rebadion", "password": "Rebadion2010"}
+        success, data = self.make_request('POST', 'admin/login', admin_credentials)
+        admin_token = None
+        if success and 'token' in data:
+            admin_token = data['token']
+            self.log_test("Admin Login", True, f"Admin authenticated: {data.get('username', 'unknown')}")
+        else:
+            self.log_test("Admin Login", False, "Failed to login as admin", data)
+            return
+
+        # Temporarily store user token and use admin token
+        user_token = self.token
+        self.token = admin_token
+
+        # Test admin stats
+        success, data = self.make_request('GET', 'admin/stats')
+        if success:
+            stats = f"Users: {data.get('total_users', 0)}, Tasks: {data.get('total_tasks', 0)}"
+            self.log_test("Admin Stats", True, stats)
+        else:
+            self.log_test("Admin Stats", False, "Failed to get admin stats", data)
+
+        # Test get all users
+        success, data = self.make_request('GET', 'admin/users')
+        self.log_test("Admin Get Users", success,
+                     f"Found {len(data)} users" if success and isinstance(data, list) else f"Error: {data}")
+
+        # Test create quest
+        quest_data = {
+            "title": "Test Quest",
+            "description": "A test quest created by API tester",
+            "quest_type": "daily",
+            "difficulty": 3,
+            "xp_reward": 100,
+            "questions": [
+                {
+                    "question": "What is productivity?",
+                    "options": ["Getting things done", "Being busy", "Working hard", "Multitasking"],
+                    "correct_answer": 0
+                }
+            ]
+        }
+        success, data = self.make_request('POST', 'admin/quests', quest_data)
+        quest_id = None
+        if success and 'id' in data:
+            quest_id = data['id']
+            self.log_test("Admin Create Quest", True, f"Quest ID: {quest_id}")
+        else:
+            self.log_test("Admin Create Quest", False, "Failed to create quest", data)
+
+        # Test get admin quests
+        success, data = self.make_request('GET', 'admin/quests')
+        self.log_test("Admin Get Quests", success,
+                     f"Found {len(data)} quests" if success and isinstance(data, list) else f"Error: {data}")
+
+        # Test create news
+        news_data = {
+            "title": "Test News",
+            "content": "This is a test news article created by the API tester",
+            "category": "announcement"
+        }
+        success, data = self.make_request('POST', 'admin/news', news_data)
+        news_id = None
+        if success and 'id' in data:
+            news_id = data['id']
+            self.log_test("Admin Create News", True, f"News ID: {news_id}")
+        else:
+            self.log_test("Admin Create News", False, "Failed to create news", data)
+
+        # Test create learning content
+        learning_data = {
+            "title": "Test Learning Content",
+            "description": "A test learning module",
+            "content": "This is the content of the learning module with detailed information.",
+            "category": "productivity",
+            "difficulty": "beginner",
+            "estimated_minutes": 15
+        }
+        success, data = self.make_request('POST', 'admin/learning', learning_data)
+        learning_id = None
+        if success and 'id' in data:
+            learning_id = data['id']
+            self.log_test("Admin Create Learning", True, f"Learning ID: {learning_id}")
+        else:
+            self.log_test("Admin Create Learning", False, "Failed to create learning content", data)
+
+        # Test create music track
+        music_data = {
+            "title": "Test Music Track",
+            "artist": "Test Artist",
+            "url": "https://www.youtube.com/watch?v=test123",
+            "category": "lofi",
+            "thumbnail": "https://example.com/thumbnail.jpg"
+        }
+        success, data = self.make_request('POST', 'admin/music', music_data)
+        music_id = None
+        if success and 'id' in data:
+            music_id = data['id']
+            self.log_test("Admin Create Music", True, f"Music ID: {music_id}")
+        else:
+            self.log_test("Admin Create Music", False, "Failed to create music track", data)
+
+        # Clean up - delete created items
+        if quest_id:
+            success, _ = self.make_request('DELETE', f'admin/quests/{quest_id}')
+            self.log_test("Admin Delete Quest", success, "Quest deleted" if success else "Failed to delete quest")
+
+        if news_id:
+            success, _ = self.make_request('DELETE', f'admin/news/{news_id}')
+            self.log_test("Admin Delete News", success, "News deleted" if success else "Failed to delete news")
+
+        if learning_id:
+            success, _ = self.make_request('DELETE', f'admin/learning/{learning_id}')
+            self.log_test("Admin Delete Learning", success, "Learning deleted" if success else "Failed to delete learning")
+
+        if music_id:
+            success, _ = self.make_request('DELETE', f'admin/music/{music_id}')
+            self.log_test("Admin Delete Music", success, "Music deleted" if success else "Failed to delete music")
+
+        # Restore user token
+        self.token = user_token
+
+    def test_public_endpoints(self):
+        """Test public endpoints that don't require authentication"""
+        print("\n🔍 Testing Public Endpoints...")
+        
+        # Temporarily remove token for public endpoints
+        user_token = self.token
+        self.token = None
+
+        # Test public news
+        success, data = self.make_request('GET', 'news')
+        self.log_test("Public News", success,
+                     f"Found {len(data)} news items" if success and isinstance(data, list) else f"Error: {data}")
+
+        # Test public learning content
+        success, data = self.make_request('GET', 'learning')
+        self.log_test("Public Learning", success,
+                     f"Found {len(data)} learning items" if success and isinstance(data, list) else f"Error: {data}")
+
+        # Test public music tracks
+        success, data = self.make_request('GET', 'music')
+        self.log_test("Public Music", success,
+                     f"Found {len(data)} music tracks" if success and isinstance(data, list) else f"Error: {data}")
+
+        # Test music by category
+        success, data = self.make_request('GET', 'music?category=lofi')
+        self.log_test("Music by Category", success,
+                     f"Found {len(data)} lofi tracks" if success and isinstance(data, list) else f"Error: {data}")
+
+        # Restore user token
+        self.token = user_token
+
+    def test_user_features(self):
+        """Test new user features like settings and quests"""
+        print("\n🔍 Testing User Features...")
+        
+        if not self.token:
+            self.log_test("User Features Tests", False, "No authentication token available")
+            return
+
+        # Test get user settings
+        success, data = self.make_request('GET', 'settings')
+        if success:
+            self.log_test("Get User Settings", True, f"Music enabled: {data.get('music_enabled', False)}")
+        else:
+            self.log_test("Get User Settings", False, "Failed to get settings", data)
+
+        # Test update user settings
+        settings_data = {
+            "music_enabled": True,
+            "music_volume": 75,
+            "preferred_music_category": "ambient",
+            "notifications_enabled": True,
+            "focus_duration": 30,
+            "theme": "dark"
+        }
+        success, data = self.make_request('PUT', 'settings', settings_data)
+        self.log_test("Update User Settings", success,
+                     "Settings updated successfully" if success else f"Error: {data}")
+
+        # Test get available quests
+        success, data = self.make_request('GET', 'quests/available')
+        self.log_test("Get Available Quests", success,
+                     f"Found {len(data)} available quests" if success and isinstance(data, list) else f"Error: {data}")
+
+        # Test AI task suggestion
+        ai_request = {
+            "context": "I want to learn Python programming",
+            "skill_tree": "Learning"
+        }
+        success, data = self.make_request('POST', 'ai/suggest-task', ai_request)
+        if success and 'title' in data:
+            self.log_test("AI Task Suggestion", True, f"Suggested: {data.get('title', 'unknown')}")
+        else:
+            self.log_test("AI Task Suggestion", False, "Failed to get AI suggestion", data)
+
     def run_all_tests(self):
         """Run complete test suite"""
         print("🚀 Starting CyberFocus API Test Suite")
