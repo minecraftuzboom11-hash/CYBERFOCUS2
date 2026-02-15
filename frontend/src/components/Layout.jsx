@@ -89,6 +89,15 @@ const Layout = ({ children }) => {
                 <span className="hidden sm:block text-sm font-medium">{user?.username}</span>
               </Link>
 
+              {/* Settings */}
+              <Link
+                to="/settings"
+                className="p-2 rounded-lg text-white/60 hover:text-[#00F0FF] hover:bg-[#00F0FF]/10 transition-colors"
+                data-testid="settings-link"
+              >
+                <Settings size={20} />
+              </Link>
+
               {/* Logout */}
               <button
                 onClick={logout}
