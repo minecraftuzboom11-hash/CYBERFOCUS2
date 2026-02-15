@@ -181,7 +181,7 @@ def calculate_xp_to_next_level(xp: int, level: int) -> tuple:
 
 @api_router.post("/auth/register")
 async def register(user: UserCreate):
-    existing = await db.users.find_one({"email": user.email})
+    existing = await db.users.find_one({"email": user.email}, {"_id": 0})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
@@ -205,7 +205,8 @@ async def register(user: UserCreate):
     await db.users.insert_one(user_doc)
     token = create_token(user_doc["id"], user_doc["email"])
     
-    user_response = {k: v for k, v in user_doc.items() if k != "password"}
+    # Create clean user response without password and _id
+    user_response = {k: v for k, v in user_doc.items() if k not in ["password", "_id"]}
     return {"token": token, "user": user_response}
 
 @api_router.post("/auth/login")
