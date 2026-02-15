@@ -762,7 +762,8 @@ async def create_admin_quest(quest: QuestCreate, admin: dict = Depends(verify_ad
         "created_by": "admin"
     }
     await db.admin_quests.insert_one(quest_doc)
-    return quest_doc
+    # Return clean document without _id
+    return {k: v for k, v in quest_doc.items() if k != "_id"}
 
 @api_router.get("/admin/quests")
 async def get_admin_quests(admin: dict = Depends(verify_admin)):
