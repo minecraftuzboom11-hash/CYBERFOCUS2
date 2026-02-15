@@ -343,17 +343,20 @@ def main():
     success = tester.run_all_tests()
     
     # Save detailed results
-    with open('/app/test_reports/backend_api_results.json', 'w') as f:
-        json.dump({
-            'summary': {
-                'total_tests': tester.tests_run,
-                'passed': tester.tests_passed,
-                'failed': tester.tests_run - tester.tests_passed,
-                'success_rate': (tester.tests_passed/tester.tests_run*100) if tester.tests_run > 0 else 0
-            },
-            'results': tester.test_results,
-            'timestamp': datetime.now().isoformat()
-        }, indent=2)
+    try:
+        with open('/app/test_reports/backend_api_results.json', 'w') as f:
+            json.dump({
+                'summary': {
+                    'total_tests': tester.tests_run,
+                    'passed': tester.tests_passed,
+                    'failed': tester.tests_run - tester.tests_passed,
+                    'success_rate': (tester.tests_passed/tester.tests_run*100) if tester.tests_run > 0 else 0
+                },
+                'results': tester.test_results,
+                'timestamp': datetime.now().isoformat()
+            }, f, indent=2)
+    except Exception as e:
+        print(f"Warning: Could not save results to file: {e}")
     
     return 0 if success else 1
 
