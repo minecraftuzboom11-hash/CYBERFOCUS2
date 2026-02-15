@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { AuthContext } from '../App';
 import {
   LayoutDashboard, ListTodo, Swords, Brain, Target,
-  BarChart3, Trophy, User, LogOut, Zap
+  BarChart3, Trophy, User, LogOut, Zap, BookOpen, Settings
 } from 'lucide-react';
 
 const Layout = ({ children }) => {
@@ -17,6 +17,7 @@ const Layout = ({ children }) => {
     { icon: <Swords size={20} />, label: 'Boss Challenge', path: '/boss-challenge' },
     { icon: <Brain size={20} />, label: 'AI Coach', path: '/ai-coach' },
     { icon: <Target size={20} />, label: 'Focus Mode', path: '/focus' },
+    { icon: <BookOpen size={20} />, label: 'Learning', path: '/learning' },
     { icon: <BarChart3 size={20} />, label: 'Analytics', path: '/analytics' },
     { icon: <Trophy size={20} />, label: 'Achievements', path: '/achievements' },
   ];
