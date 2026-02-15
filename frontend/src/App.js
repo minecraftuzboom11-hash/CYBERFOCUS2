@@ -122,6 +122,9 @@ function App() {
                 <Route path="/analytics" element={user ? <Analytics /> : <Navigate to="/" />} />
                 <Route path="/achievements" element={user ? <Achievements /> : <Navigate to="/" />} />
                 <Route path="/profile" element={user ? <Profile /> : <Navigate to="/" />} />
+                <Route path="/learning" element={user ? <LearningPage /> : <Navigate to="/" />} />
+                <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/" />} />
+                <Route path="/admin" element={<AdminPanel />} />
               </Routes>
             </AnimatePresence>
           </BrowserRouter>
