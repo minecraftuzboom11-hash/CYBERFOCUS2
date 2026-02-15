@@ -897,7 +897,8 @@ async def create_learning_content(content: LearningContentCreate, admin: dict = 
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.learning_content.insert_one(content_doc)
-    return content_doc
+    # Return clean document without _id
+    return {k: v for k, v in content_doc.items() if k != "_id"}
 
 @api_router.get("/admin/learning")
 async def get_all_learning_admin(admin: dict = Depends(verify_admin)):
