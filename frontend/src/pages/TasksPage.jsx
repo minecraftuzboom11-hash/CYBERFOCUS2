@@ -6,7 +6,7 @@ import { AuthContext, GameContext } from '../App';
 import Layout from '../components/Layout';
 import { 
   Plus, CheckCircle, Trash2, Clock, Zap, X,
-  ListTodo, Filter, ChevronDown
+  ListTodo, Filter, ChevronDown, Sparkles, Loader2
 } from 'lucide-react';
 
 const SKILL_TREES = ['General', 'Work', 'Health', 'Learning', 'Creative', 'Social'];
@@ -18,6 +18,8 @@ const TasksPage = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [aiSuggesting, setAiSuggesting] = useState(false);
+  const [aiContext, setAiContext] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -39,6 +41,33 @@ const TasksPage = () => {
       console.error('Failed to fetch tasks:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const suggestWithAI = async () => {
+    if (!aiContext.trim()) {
+      toast.error('Please describe what you want to work on');
+      return;
+    }
+    setAiSuggesting(true);
+    try {
+      const response = await axios.post('/ai/suggest-task', { 
+        context: aiContext,
+        skill_tree: formData.skill_tree !== 'General' ? formData.skill_tree : null
+      });
+      setFormData({
+        ...formData,
+        title: response.data.title || aiContext,
+        description: response.data.description || '',
+        difficulty: response.data.difficulty || 2,
+        estimated_minutes: response.data.estimated_minutes || 30,
+        skill_tree: response.data.skill_tree || formData.skill_tree
+      });
+      toast.success('AI suggestion applied!');
+    } catch (error) {
+      toast.error('AI suggestion failed');
+    } finally {
+      setAiSuggesting(false);
     }
   };
 
