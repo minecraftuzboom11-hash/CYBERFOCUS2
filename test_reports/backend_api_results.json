@@ -11,141 +11,141 @@
       "success": true,
       "details": "Status: healthy",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:37.355704"
+      "timestamp": "2026-02-15T05:31:45.688848"
     },
     {
       "test_name": "Data Endpoint",
       "success": true,
       "details": "Message: CyberFocus API is running",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:37.481963"
+      "timestamp": "2026-02-15T05:31:45.789077"
     },
     {
       "test_name": "User Registration",
       "success": true,
-      "details": "User ID: defc1058-29bf-4d71-ae25-b2fa2490ef91",
+      "details": "User ID: a0e2a3c7-30c8-4837-af36-b3fdf95a0551",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:37.832810"
+      "timestamp": "2026-02-15T05:31:46.140467"
     },
     {
       "test_name": "Get Current User",
       "success": true,
-      "details": "Username: testuser_050237",
+      "details": "Username: testuser_053145",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:37.941427"
+      "timestamp": "2026-02-15T05:31:46.264911"
     },
     {
       "test_name": "User Login",
       "success": true,
       "details": "New token received",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:38.298655"
+      "timestamp": "2026-02-15T05:31:46.592997"
     },
     {
       "test_name": "Create Task",
       "success": true,
-      "details": "Task ID: fdb30d39-aedf-4c08-bfcf-c2071ca9dbfe, XP Reward: 25",
+      "details": "Task ID: cbd0f119-6b7c-43e8-a2a1-e293c52d6495, XP Reward: 25",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:38.428392"
+      "timestamp": "2026-02-15T05:31:46.720281"
     },
     {
       "test_name": "Get All Tasks",
       "success": true,
       "details": "Found 1 tasks",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:38.532005"
+      "timestamp": "2026-02-15T05:31:46.827809"
     },
     {
       "test_name": "Get Pending Tasks",
       "success": true,
       "details": "Found 1 pending tasks",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:38.634145"
+      "timestamp": "2026-02-15T05:31:46.951346"
     },
     {
       "test_name": "Complete Task",
       "success": true,
       "details": "XP earned: 25, Level up: False",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:38.750046"
+      "timestamp": "2026-02-15T05:31:47.054240"
     },
     {
       "test_name": "Delete Task",
       "success": true,
       "details": "Task deleted successfully",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:38.865735"
+      "timestamp": "2026-02-15T05:31:47.164563"
     },
     {
       "test_name": "Get Boss Challenge",
       "success": true,
-      "details": "Challenge: Work for 2 hours straight in Focus Mode...",
+      "details": "Challenge: Complete a task you've been procrastinating on...",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:38.983732"
+      "timestamp": "2026-02-15T05:31:47.264612"
     },
     {
       "test_name": "Complete Boss Challenge",
       "success": true,
-      "details": "XP earned: 200, Level up: True",
+      "details": "XP earned: 250, Level up: True",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:39.091619"
+      "timestamp": "2026-02-15T05:31:47.370373"
     },
     {
       "test_name": "AI Coach Chat",
       "success": true,
-      "details": "Response: Greetings, testuser_050237! Ready to level up your productivity stats today? Here's your mission: \n\n...",
+      "details": "Response: Welcome back to the grind, testuser_053145! Today, let's power up your productivity engine. \u26a1 Here's...",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:43.272644"
+      "timestamp": "2026-02-15T05:31:51.297986"
     },
     {
       "test_name": "AI Coach History",
       "success": true,
       "details": "Found 2 messages",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:43.400705"
+      "timestamp": "2026-02-15T05:31:51.475421"
     },
     {
       "test_name": "Start Focus Session",
       "success": true,
-      "details": "Session ID: 0d7e004b-ef1a-45cc-89cc-c3f30e2ab4ef",
+      "details": "Session ID: ab4d34fb-6009-4171-8b92-20eae828d0a6",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:43.518820"
+      "timestamp": "2026-02-15T05:31:51.583682"
     },
     {
       "test_name": "Complete Focus Session",
       "success": true,
       "details": "XP earned: 50, Level up: False",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:43.629379"
+      "timestamp": "2026-02-15T05:31:51.684486"
     },
     {
       "test_name": "Focus History",
       "success": true,
       "details": "Found 1 sessions",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:43.752234"
+      "timestamp": "2026-02-15T05:31:51.790459"
     },
     {
       "test_name": "Dashboard Analytics",
       "success": true,
       "details": "Tasks: 0, Level: 2, Streak: 0",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:43.874284"
+      "timestamp": "2026-02-15T05:31:51.888287"
     },
     {
       "test_name": "Weekly Analytics",
       "success": true,
       "details": "Found 7 days of data",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:43.996925"
+      "timestamp": "2026-02-15T05:31:52.013031"
     },
     {
       "test_name": "Get Achievements",
       "success": true,
       "details": "Found 10 achievements, 0 unlocked",
       "response_data": null,
-      "timestamp": "2026-02-15T05:02:44.109287"
+      "timestamp": "2026-02-15T05:31:52.137057"
     }
   ],
-  "timestamp": "2026-02-15T05:02:44.109552"
+  "timestamp": "2026-02-15T05:31:52.137375"
 }
