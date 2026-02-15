@@ -1,0 +1,191 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "CyberFocus",
+      "aesthetic": "Cyberpunk Gamified HUD",
+      "emotional_tone": "High-Energy, Futuristic, Motivating, Intense",
+      "theme_mode": "dark"
+    },
+    "typography": {
+      "font_family": {
+        "headings": "Orbitron, sans-serif",
+        "body": "Inter, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "weights": {
+        "headings": "700",
+        "body": "400",
+        "bold": "600"
+      },
+      "scale": {
+        "h1": "text-5xl md:text-7xl tracking-tighter uppercase",
+        "h2": "text-3xl md:text-5xl tracking-tight uppercase",
+        "h3": "text-2xl md:text-3xl tracking-wide",
+        "body": "text-base leading-relaxed",
+        "small": "text-sm tracking-wider uppercase opacity-80"
+      },
+      "installation": "Add <link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400&display=swap' rel='stylesheet'> to index.html"
+    },
+    "colors": {
+      "palette": {
+        "background": "#050505",
+        "foreground": "#ffffff",
+        "card": "#0a0a12",
+        "card_foreground": "#ffffff",
+        "primary": "#00F0FF",
+        "primary_foreground": "#000000",
+        "secondary": "#FF0099",
+        "secondary_foreground": "#ffffff",
+        "accent": "#39FF14",
+        "accent_foreground": "#000000",
+        "destructive": "#FF3B30",
+        "warning": "#FAFF00",
+        "muted": "#1a1a2e",
+        "muted_foreground": "#a0a0b0",
+        "border": "#2a2a3e",
+        "input": "#1a1a2e",
+        "ring": "#00F0FF"
+      },
+      "gradients": {
+        "primary": "bg-gradient-to-r from-[#00F0FF] to-[#0099FF]",
+        "secondary": "bg-gradient-to-r from-[#FF0099] to-[#FF0055]",
+        "accent": "bg-gradient-to-r from-[#39FF14] to-[#00FF99]",
+        "glass": "bg-black/40 backdrop-blur-xl border border-white/10"
+      },
+      "usage_rules": {
+        "background": "Always use #050505 (Void Black) as the main background.",
+        "text": "Use pure white for headings, #a0a0b0 for secondary text.",
+        "cta": "Use Neon Cyan (#00F0FF) or Neon Pink (#FF0099) for primary actions.",
+        "borders": "Use subtle 1px borders with 10-20% opacity for structure.",
+        "glows": "Use drop-shadows with the primary color to create a neon glow effect."
+      }
+    },
+    "visual_enhancers": {
+      "glassmorphism": "backdrop-filter: blur(16px); background: rgba(10, 10, 18, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);",
+      "neon_glow": "box-shadow: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);",
+      "grid_lines": "background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px); background-size: 40px 40px;",
+      "scanlines": "background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px); pointer-events: none;",
+      "borders": "rounded-none or rounded-sm (sharp edges preferred for cyberpunk)",
+      "shadows": "shadow-[0_0_20px_rgba(0,240,255,0.15)]"
+    },
+    "layout": {
+      "grid_system": "Bento Grid (Mode B)",
+      "spacing": "Generous padding (p-6, p-8) inside cards. Gap-4 or Gap-6 between grid items.",
+      "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+      "z_index": {
+        "background": "-10",
+        "grid": "0",
+        "content": "10",
+        "overlay": "50",
+        "modal": "100"
+      }
+    },
+    "motion": {
+      "library": "framer-motion",
+      "animations": {
+        "hover": "scale: 1.02, transition: { duration: 0.2 }",
+        "tap": "scale: 0.98",
+        "entrance": "initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5 }",
+        "glow_pulse": "animate: { boxShadow: ['0 0 10px rgba(0,240,255,0.5)', '0 0 20px rgba(0,240,255,0.8)', '0 0 10px rgba(0,240,255,0.5)'] }, transition: { duration: 2, repeat: Infinity }"
+      }
+    },
+    "components": {
+      "buttons": {
+        "primary": "bg-[#00F0FF] text-black font-bold uppercase tracking-wider hover:bg-[#00C0CC] hover:shadow-[0_0_15px_#00F0FF] transition-all duration-300 clip-path-polygon",
+        "secondary": "bg-transparent border border-[#FF0099] text-[#FF0099] hover:bg-[#FF0099]/10 hover:shadow-[0_0_15px_#FF0099] uppercase tracking-wider",
+        "ghost": "text-white/70 hover:text-white hover:bg-white/5"
+      },
+      "cards": {
+        "base": "bg-black/40 backdrop-blur-xl border border-white/10 p-6 relative overflow-hidden group",
+        "hover_effect": "group-hover:border-[#00F0FF]/50 transition-colors duration-300"
+      },
+      "inputs": {
+        "base": "bg-black/50 border-white/10 text-white placeholder:text-white/30 focus:border-[#00F0FF] focus:ring-1 focus:ring-[#00F0FF] transition-all"
+      }
+    },
+    "media": {
+      "image_urls": {
+        "backgrounds": [
+          {
+            "url": "https://images.unsplash.com/photo-1701377000907-64f247c931f0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3MjQyMTd8MHwxfHNlYXJjaHwyfHxjeWJlcnB1bmslMjBjaXR5JTIwbmVvbiUyMG5pZ2h0JTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3NzExMzA5NDJ8MA&ixlib=rb-4.1.0&q=85",
+            "category": "hero_bg",
+            "description": "Neon city street at night, perfect for landing page hero background"
+          },
+          {
+            "url": "https://images.unsplash.com/photo-1627740660376-bc7506720b8a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3MjQyMTd8MHwxfHNlYXJjaHwxfHxjeWJlcnB1bmslMjBjaXR5JTIwbmVvbiUyMG5pZ2h0JTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3NzExMzA5NDJ8MA&ixlib=rb-4.1.0&q=85",
+            "category": "section_bg",
+            "description": "Abstract yellow lights, good for secondary sections"
+          }
+        ],
+        "avatars": [
+          {
+            "url": "https://images.unsplash.com/photo-1573383104533-84fbfd3c10d0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwxfHxjeWJlcnB1bmslMjBnYW1lciUyMGF2YXRhciUyMG5lb258ZW58MHx8fHwxNzcxMTMwOTY1fDA&ixlib=rb-4.1.0&q=85",
+            "category": "user_avatar",
+            "description": "Person in neon mask, default user avatar"
+          },
+          {
+            "url": "https://images.unsplash.com/photo-1656485050486-df7509b8a4b6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwzfHxjeWJlcnB1bmslMjBnYW1lciUyMGF2YXRhciUyMG5lb258ZW58MHx8fHwxNzcxMTMwOTY1fDA&ixlib=rb-4.1.0&q=85",
+            "category": "coach_avatar",
+            "description": "Neon mask figure, use for AI Coach avatar"
+          }
+        ],
+        "badges": [
+          {
+            "url": "https://images.unsplash.com/photo-1764258560295-21e74c3d0d15?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwxfHxmdXR1cmlzdGljJTIwYWJzdHJhY3QlMjBuZW9uJTIwc2hhcGVzJTIwM2R8ZW58MHx8fHwxNzcxMTMwOTQ3fDA&ixlib=rb-4.1.0&q=85",
+            "category": "achievement_badge",
+            "description": "Abstract neon lines, use for 'Speed Demon' or 'Streak' badge"
+          },
+          {
+            "url": "https://images.unsplash.com/photo-1763932229096-c4a0411bf966?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwyfHxmdXR1cmlzdGljJTIwYWJzdHJhY3QlMjBuZW9uJTIwc2hhcGVzJTIwM2R8ZW58MHx8fHwxNzcxMTMwOTQ3fDA&ixlib=rb-4.1.0&q=85",
+            "category": "achievement_badge",
+            "description": "Swirling neon shapes, use for 'Level Up' badge"
+          }
+        ]
+      }
+    },
+    "accessibility": {
+      "contrast": "Ensure all text has at least 4.5:1 contrast against the dark background.",
+      "focus_states": "Visible neon ring (#00F0FF) on focus for all interactive elements.",
+      "reduced_motion": "Respect prefers-reduced-motion media query for animations."
+    }
+  },
+  "instructions_to_main_agent": {
+    "setup": [
+      "Install 'framer-motion' for animations.",
+      "Install 'lucide-react' for icons.",
+      "Install 'clsx' and 'tailwind-merge' for class management.",
+      "Update 'tailwind.config.js' with the custom colors and font families defined in 'design_system.colors' and 'design_system.typography'.",
+      "Add the Google Fonts link to 'public/index.html'."
+    ],
+    "implementation_rules": [
+      "Use the 'Bento Grid' layout for the Dashboard.",
+      "Apply 'glassmorphism' styles to all cards and containers.",
+      "Use 'Orbitron' font for all Headings (h1-h6).",
+      "Use 'Inter' font for all body text.",
+      "Implement the 'XP Progress Bar' with a neon fill animation.",
+      "Create a 'Level Up' overlay animation using framer-motion.",
+      "Ensure the 'AI Coach' chat interface looks like a futuristic terminal or messenger.",
+      "Use 'sonner' for toast notifications with a dark, neon-bordered style."
+    ],
+    "universal_guidelines": [
+      "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+      "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+      "Create depth through layered design elements with z-index hierarchy.",
+      "Use glass-morphism effects with backdrop filters (12-24px blur).",
+      "You MUST NOT apply universal transition. Eg: 'transition: all'. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms.",
+      "You MUST NOT center align the app container, ie do not add '.App { text-align: center; }' in the css file. This disrupts the human natural reading flow of text.",
+      "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style.",
+      "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+      "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+      "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+      "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+      "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN.",
+      "Prioritize using pre-existing components from src/components/ui when applicable.",
+      "Create new components that match the style and conventions of existing components when needed.",
+      "Examine existing components to understand the project's component patterns before creating new ones.",
+      "Components MUST use named exports (export const ComponentName = ...).",
+      "Pages MUST use default exports (export default function PageName() {...}).",
+      "Use 'sonner' for toasts. Sonner component are located in '/app/src/components/ui/sonner.tsx'."
+    ]
+  }
+}
