@@ -510,6 +510,7 @@ class CyberFocusAPITester:
 
         # Run all test categories
         self.test_health_endpoints()
+        self.test_public_endpoints()  # Test public endpoints first
         
         if self.test_auth_flow():
             self.test_task_management()
@@ -518,6 +519,8 @@ class CyberFocusAPITester:
             self.test_focus_mode()
             self.test_analytics()
             self.test_achievements()
+            self.test_user_features()  # Test new user features
+            self.test_admin_functionality()  # Test admin features
         else:
             print("\n❌ Authentication failed - skipping authenticated tests")
 
