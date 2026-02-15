@@ -662,6 +662,449 @@ async def get_achievements(current_user: dict = Depends(get_current_user)):
     
     return result
 
+# ============ ADMIN ROUTES ============
+
+ADMIN_USERNAME = "Rebadion"
+ADMIN_PASSWORD = "Rebadion2010"
+
+class AdminLogin(BaseModel):
+    username: str
+    password: str
+
+class QuestCreate(BaseModel):
+    title: str
+    description: str
+    quest_type: str = "daily"  # daily, weekly, boss
+    difficulty: int = 3
+    xp_reward: int = 100
+    questions: Optional[List[dict]] = None  # For multiple choice quests
+
+class NewsCreate(BaseModel):
+    title: str
+    content: str
+    category: str = "announcement"
+
+class LearningContentCreate(BaseModel):
+    title: str
+    description: str
+    content: str
+    category: str  # programming, productivity, mindset, etc.
+    difficulty: str = "beginner"
+    estimated_minutes: int = 15
+
+class MusicTrackCreate(BaseModel):
+    title: str
+    artist: str
+    url: str  # YouTube or other URL
+    category: str = "lofi"  # lofi, ambient, classical, nature
+    thumbnail: Optional[str] = None
+
+@api_router.post("/admin/login")
+async def admin_login(credentials: AdminLogin):
+    if credentials.username == ADMIN_USERNAME and credentials.password == ADMIN_PASSWORD:
+        token = jwt.encode({
+            "admin": True,
+            "username": credentials.username,
+            "exp": datetime.now(timezone.utc) + timedelta(hours=24)
+        }, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        return {"token": token, "admin": True, "username": credentials.username}
+    raise HTTPException(status_code=401, detail="Invalid admin credentials")
+
+async def verify_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if not payload.get("admin"):
+            raise HTTPException(status_code=403, detail="Admin access required")
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Admin token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid admin token")
+
+@api_router.get("/admin/stats")
+async def get_admin_stats(admin: dict = Depends(verify_admin)):
+    total_users = await db.users.count_documents({})
+    total_tasks = await db.tasks.count_documents({})
+    completed_tasks = await db.tasks.count_documents({"completed": True})
+    total_focus_sessions = await db.focus_sessions.count_documents({"completed": True})
+    
+    # Get users with streaks
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+    
+    # Sort by streak
+    users_by_streak = sorted(users, key=lambda x: x.get("current_streak", 0), reverse=True)[:10]
+    
+    return {
+        "total_users": total_users,
+        "total_tasks": total_tasks,
+        "completed_tasks": completed_tasks,
+        "total_focus_sessions": total_focus_sessions,
+        "top_streaks": users_by_streak
+    }
+
+@api_router.get("/admin/users")
+async def get_all_users(admin: dict = Depends(verify_admin)):
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+    return users
+
+@api_router.post("/admin/quests")
+async def create_admin_quest(quest: QuestCreate, admin: dict = Depends(verify_admin)):
+    quest_doc = {
+        "id": str(uuid.uuid4()),
+        "title": quest.title,
+        "description": quest.description,
+        "quest_type": quest.quest_type,
+        "difficulty": quest.difficulty,
+        "xp_reward": quest.xp_reward,
+        "questions": quest.questions or [],
+        "active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": "admin"
+    }
+    await db.admin_quests.insert_one(quest_doc)
+    return quest_doc
+
+@api_router.get("/admin/quests")
+async def get_admin_quests(admin: dict = Depends(verify_admin)):
+    quests = await db.admin_quests.find({}, {"_id": 0}).to_list(100)
+    return quests
+
+@api_router.delete("/admin/quests/{quest_id}")
+async def delete_admin_quest(quest_id: str, admin: dict = Depends(verify_admin)):
+    result = await db.admin_quests.delete_one({"id": quest_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    return {"message": "Quest deleted"}
+
+@api_router.post("/admin/news")
+async def create_news(news: NewsCreate, admin: dict = Depends(verify_admin)):
+    news_doc = {
+        "id": str(uuid.uuid4()),
+        "title": news.title,
+        "content": news.content,
+        "category": news.category,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.news.insert_one(news_doc)
+    return news_doc
+
+@api_router.get("/admin/news")
+async def get_all_news(admin: dict = Depends(verify_admin)):
+    news = await db.news.find({}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    return news
+
+@api_router.delete("/admin/news/{news_id}")
+async def delete_news(news_id: str, admin: dict = Depends(verify_admin)):
+    result = await db.news.delete_one({"id": news_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="News not found")
+    return {"message": "News deleted"}
+
+# ============ PUBLIC QUESTS ROUTES ============
+
+@api_router.get("/quests/available")
+async def get_available_quests(current_user: dict = Depends(get_current_user)):
+    quests = await db.admin_quests.find({"active": True}, {"_id": 0}).to_list(50)
+    
+    # Check which quests user has completed
+    completed = await db.quest_completions.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(100)
+    completed_ids = {c["quest_id"] for c in completed}
+    
+    for quest in quests:
+        quest["completed"] = quest["id"] in completed_ids
+    
+    return quests
+
+@api_router.post("/quests/{quest_id}/submit")
+async def submit_quest(quest_id: str, answers: dict, current_user: dict = Depends(get_current_user)):
+    quest = await db.admin_quests.find_one({"id": quest_id}, {"_id": 0})
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    # Check if already completed
+    existing = await db.quest_completions.find_one({
+        "user_id": current_user["id"],
+        "quest_id": quest_id
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Quest already completed")
+    
+    # Calculate score for multiple choice
+    score = 0
+    total_questions = len(quest.get("questions", []))
+    if total_questions > 0:
+        for i, q in enumerate(quest.get("questions", [])):
+            user_answer = answers.get("answers", {}).get(str(i))
+            if user_answer == q.get("correct_answer"):
+                score += 1
+    
+    # Award XP based on score
+    xp_earned = quest["xp_reward"] if total_questions == 0 else int(quest["xp_reward"] * (score / total_questions))
+    
+    # Save completion
+    await db.quest_completions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "quest_id": quest_id,
+        "score": score,
+        "total_questions": total_questions,
+        "xp_earned": xp_earned,
+        "completed_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Update user XP
+    new_xp = current_user["xp"] + xp_earned
+    new_level = calculate_level(new_xp)
+    level_up = new_level > current_user["level"]
+    
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {"xp": new_xp, "level": new_level}}
+    )
+    
+    return {
+        "score": score,
+        "total_questions": total_questions,
+        "xp_earned": xp_earned,
+        "level_up": level_up,
+        "new_level": new_level if level_up else None
+    }
+
+# ============ NEWS ROUTES (PUBLIC) ============
+
+@api_router.get("/news")
+async def get_public_news():
+    news = await db.news.find({}, {"_id": 0}).sort("created_at", -1).to_list(20)
+    return news
+
+# ============ LEARNING ROUTES ============
+
+@api_router.post("/admin/learning")
+async def create_learning_content(content: LearningContentCreate, admin: dict = Depends(verify_admin)):
+    content_doc = {
+        "id": str(uuid.uuid4()),
+        "title": content.title,
+        "description": content.description,
+        "content": content.content,
+        "category": content.category,
+        "difficulty": content.difficulty,
+        "estimated_minutes": content.estimated_minutes,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.learning_content.insert_one(content_doc)
+    return content_doc
+
+@api_router.get("/admin/learning")
+async def get_all_learning_admin(admin: dict = Depends(verify_admin)):
+    content = await db.learning_content.find({}, {"_id": 0}).to_list(100)
+    return content
+
+@api_router.delete("/admin/learning/{content_id}")
+async def delete_learning_content(content_id: str, admin: dict = Depends(verify_admin)):
+    result = await db.learning_content.delete_one({"id": content_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Content not found")
+    return {"message": "Content deleted"}
+
+@api_router.get("/learning")
+async def get_learning_content(category: Optional[str] = None):
+    query = {} if not category else {"category": category}
+    content = await db.learning_content.find(query, {"_id": 0}).to_list(100)
+    return content
+
+@api_router.get("/learning/{content_id}")
+async def get_learning_detail(content_id: str):
+    content = await db.learning_content.find_one({"id": content_id}, {"_id": 0})
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+    return content
+
+@api_router.post("/learning/{content_id}/complete")
+async def complete_learning(content_id: str, current_user: dict = Depends(get_current_user)):
+    content = await db.learning_content.find_one({"id": content_id}, {"_id": 0})
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    # Check if already completed
+    existing = await db.learning_completions.find_one({
+        "user_id": current_user["id"],
+        "content_id": content_id
+    })
+    if existing:
+        return {"message": "Already completed", "xp_earned": 0}
+    
+    xp_earned = content["estimated_minutes"] * 2
+    
+    await db.learning_completions.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "content_id": content_id,
+        "xp_earned": xp_earned,
+        "completed_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    new_xp = current_user["xp"] + xp_earned
+    new_level = calculate_level(new_xp)
+    
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {"xp": new_xp, "level": new_level}}
+    )
+    
+    return {"message": "Learning completed!", "xp_earned": xp_earned}
+
+# ============ MUSIC ROUTES ============
+
+# Default music tracks
+DEFAULT_MUSIC = [
+    {"id": "1", "title": "Lofi Hip Hop Radio", "artist": "Lofi Girl", "url": "https://www.youtube.com/watch?v=jfKfPfyJRdk", "category": "lofi", "thumbnail": "https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg"},
+    {"id": "2", "title": "Chill Coding Music", "artist": "Programming Music", "url": "https://www.youtube.com/watch?v=f02mOEt11OQ", "category": "lofi", "thumbnail": "https://i.ytimg.com/vi/f02mOEt11OQ/hqdefault.jpg"},
+    {"id": "3", "title": "Deep Focus Music", "artist": "Study Music", "url": "https://www.youtube.com/watch?v=lTRiuFIWV54", "category": "ambient", "thumbnail": "https://i.ytimg.com/vi/lTRiuFIWV54/hqdefault.jpg"},
+    {"id": "4", "title": "Relaxing Piano Music", "artist": "Classical Study", "url": "https://www.youtube.com/watch?v=77ZozI0rw7w", "category": "classical", "thumbnail": "https://i.ytimg.com/vi/77ZozI0rw7w/hqdefault.jpg"},
+    {"id": "5", "title": "Nature Sounds - Rain", "artist": "Nature Ambience", "url": "https://www.youtube.com/watch?v=mPZkdNFkNps", "category": "nature", "thumbnail": "https://i.ytimg.com/vi/mPZkdNFkNps/hqdefault.jpg"},
+    {"id": "6", "title": "Synthwave Radio", "artist": "Retro Vibes", "url": "https://www.youtube.com/watch?v=4xDzrJKXOOY", "category": "synthwave", "thumbnail": "https://i.ytimg.com/vi/4xDzrJKXOOY/hqdefault.jpg"},
+]
+
+@api_router.post("/admin/music")
+async def add_music_track(track: MusicTrackCreate, admin: dict = Depends(verify_admin)):
+    track_doc = {
+        "id": str(uuid.uuid4()),
+        "title": track.title,
+        "artist": track.artist,
+        "url": track.url,
+        "category": track.category,
+        "thumbnail": track.thumbnail or "",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.music_tracks.insert_one(track_doc)
+    return track_doc
+
+@api_router.get("/admin/music")
+async def get_all_music_admin(admin: dict = Depends(verify_admin)):
+    tracks = await db.music_tracks.find({}, {"_id": 0}).to_list(100)
+    return DEFAULT_MUSIC + tracks
+
+@api_router.delete("/admin/music/{track_id}")
+async def delete_music_track(track_id: str, admin: dict = Depends(verify_admin)):
+    result = await db.music_tracks.delete_one({"id": track_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Track not found")
+    return {"message": "Track deleted"}
+
+@api_router.get("/music")
+async def get_music_tracks(category: Optional[str] = None):
+    custom_tracks = await db.music_tracks.find({}, {"_id": 0}).to_list(100)
+    all_tracks = DEFAULT_MUSIC + custom_tracks
+    
+    if category:
+        all_tracks = [t for t in all_tracks if t.get("category") == category]
+    
+    return all_tracks
+
+# ============ USER SETTINGS ============
+
+class UserSettings(BaseModel):
+    music_enabled: bool = True
+    music_volume: int = 50
+    preferred_music_category: str = "lofi"
+    notifications_enabled: bool = True
+    focus_duration: int = 25
+    theme: str = "dark"
+
+@api_router.get("/settings")
+async def get_user_settings(current_user: dict = Depends(get_current_user)):
+    settings = await db.user_settings.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not settings:
+        # Return defaults
+        return {
+            "user_id": current_user["id"],
+            "music_enabled": True,
+            "music_volume": 50,
+            "preferred_music_category": "lofi",
+            "notifications_enabled": True,
+            "focus_duration": 25,
+            "theme": "dark"
+        }
+    return settings
+
+@api_router.put("/settings")
+async def update_user_settings(settings: UserSettings, current_user: dict = Depends(get_current_user)):
+    settings_doc = {
+        "user_id": current_user["id"],
+        **settings.model_dump()
+    }
+    await db.user_settings.update_one(
+        {"user_id": current_user["id"]},
+        {"$set": settings_doc},
+        upsert=True
+    )
+    return settings_doc
+
+# ============ AI TASK SUGGESTIONS ============
+
+class TaskSuggestionRequest(BaseModel):
+    context: str  # What the user is working on
+    skill_tree: Optional[str] = None
+
+@api_router.post("/ai/suggest-task")
+async def suggest_task(request: TaskSuggestionRequest, current_user: dict = Depends(get_current_user)):
+    if not EMERGENT_LLM_KEY:
+        raise HTTPException(status_code=500, detail="AI not configured")
+    
+    system_message = """You are a task creation assistant for a gamified productivity app.
+Based on the user's context, suggest a specific, actionable task.
+Return a JSON object with:
+- title: A clear, concise task title (max 60 chars)
+- description: Brief description of what to do
+- difficulty: Number 1-5 based on complexity
+- estimated_minutes: Realistic time estimate
+- skill_tree: Category (Work, Learning, Health, Creative, Social, General)
+
+Only return valid JSON, no markdown or explanation."""
+    
+    try:
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"task_suggest_{current_user['id']}_{datetime.now().timestamp()}",
+            system_message=system_message
+        ).with_model("openai", "gpt-4o")
+        
+        prompt = f"User context: {request.context}"
+        if request.skill_tree:
+            prompt += f"\nPreferred category: {request.skill_tree}"
+        
+        user_message = UserMessage(text=prompt)
+        response = await chat.send_message(user_message)
+        
+        # Try to parse JSON
+        import json
+        try:
+            # Clean response
+            response = response.strip()
+            if response.startswith("```json"):
+                response = response[7:]
+            if response.startswith("```"):
+                response = response[3:]
+            if response.endswith("```"):
+                response = response[:-3]
+            
+            task_data = json.loads(response.strip())
+            return task_data
+        except json.JSONDecodeError:
+            return {
+                "title": request.context[:60],
+                "description": "AI-suggested task",
+                "difficulty": 2,
+                "estimated_minutes": 30,
+                "skill_tree": request.skill_tree or "General"
+            }
+    except Exception as e:
+        logging.error(f"AI task suggestion error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"AI error: {str(e)}")
+
 # ============ DATA ROUTES (for testing) ============
 
 @api_router.get("/data")
@@ -674,7 +1117,7 @@ async def health_check():
 
 @api_router.get("/")
 async def root():
-    return {"message": "Welcome to CyberFocus API", "version": "1.0.0"}
+    return {"message": "Welcome to CyberFocus API", "version": "2.0.0"}
 
 # Include the router in the main app
 app.include_router(api_router)
