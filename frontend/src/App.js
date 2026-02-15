@@ -16,10 +16,14 @@ import FocusMode from './pages/FocusMode';
 import Analytics from './pages/Analytics';
 import Achievements from './pages/Achievements';
 import Profile from './pages/Profile';
+import AdminPanel from './pages/AdminPanel';
+import LearningPage from './pages/LearningPage';
+import SettingsPage from './pages/SettingsPage';
 
 // Components
 import LevelUpAnimation from './components/LevelUpAnimation';
 import XPAnimation from './components/XPAnimation';
+import MusicPlayer from './components/MusicPlayer';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
