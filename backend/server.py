@@ -420,8 +420,8 @@ async def complete_boss_challenge(challenge_id: str, current_user: dict = Depend
 
 @api_router.post("/ai-coach/chat", response_model=ChatResponse)
 async def chat_with_ai_coach(message: ChatMessage, current_user: dict = Depends(get_current_user)):
-    if not EMERGENT_LLM_KEY:
-        raise HTTPException(status_code=500, detail="AI Coach not configured")
+    if not EMERGENT_LLM_KEY or not EMERGENT_AVAILABLE:
+        raise HTTPException(status_code=500, detail="AI Coach not configured. Please add EMERGENT_LLM_KEY.")
     
     session_id = f"coach_{current_user['id']}"
     
