@@ -1,16 +1,16 @@
-# CyberFocus - Render Single Service Deployment
+# CyberFocus - Render Deployment
 
 services:
   - type: web
     name: cyberfocus
-    env: python
+    runtime: python
     region: oregon
     plan: free
-    buildCommand: |
-      cd backend && pip install -r requirements.txt && cd ../frontend && yarn install && yarn build && cp -r build ../backend/static
-    startCommand: |
-      cd backend && uvicorn server:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r backend/requirements.txt && cd frontend && yarn install && yarn build && cp -r build ../backend/static
+    startCommand: cd backend && uvicorn server:app --host 0.0.0.0 --port $PORT
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
       - key: MONGO_URL
         sync: false
       - key: DB_NAME
@@ -19,5 +19,3 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: "*"
-      - key: PYTHON_VERSION
-        value: "3.11"
