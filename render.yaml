@@ -1,30 +1,23 @@
-# CyberFocus - Render Deployment Configuration
+# CyberFocus - Render Single Service Deployment
 
-## Backend Service
 services:
   - type: web
-    name: cyberfocus-backend
+    name: cyberfocus
     env: python
     region: oregon
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    plan: free
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: chmod +x start.sh && ./start.sh
     envVars:
       - key: MONGO_URL
         sync: false
+      - key: DB_NAME
+        value: cyberfocus
       - key: JWT_SECRET
         generateValue: true
-      - key: EMERGENT_LLM_KEY
-        sync: false
       - key: CORS_ORIGINS
-        value: https://cyberfocus-frontend.onrender.com
+        value: "*"
       - key: PYTHON_VERSION
-        value: 3.11.0
-
-  - type: web
-    name: cyberfocus-frontend
-    env: static
-    buildCommand: cd frontend && yarn install && yarn build
-    staticPublishPath: ./frontend/build
-    envVars:
+        value: "3.11"
       - key: REACT_APP_BACKEND_URL
-        value: https://cyberfocus-backend.onrender.com
+        value: ""
