@@ -1154,6 +1154,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve static frontend files (for production deployment)
+static_dir = ROOT_DIR / "static"
+if static_dir.exists():
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
+    
+    # Serve static assets
+    app.mount("/static", StaticFiles(directory=str(static_dir / "static")), name="static")
+    
+    # Serve index.html for all non-API routes (SPA support)
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        # Don't serve index.html for API routes
+        if full_path.startswith("api"):
+            raise HTTPException(status_code=404, detail="Not found")
+        
+        # Check if file exists in static folder
+        file_path = static_dir / full_path
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(str(file_path))
+        
+        # Return index.html for SPA routing
+        index_path = static_dir / "index.html"
+        if index_path.exists():
+            return FileResponse(str(index_path))
+        
+        raise HTTPException(status_code=404, detail="Not found")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
