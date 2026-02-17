@@ -1068,8 +1068,15 @@ class TaskSuggestionRequest(BaseModel):
 
 @api_router.post("/ai/suggest-task")
 async def suggest_task(request: TaskSuggestionRequest, current_user: dict = Depends(get_current_user)):
-    if not EMERGENT_LLM_KEY:
-        raise HTTPException(status_code=500, detail="AI not configured")
+    if not EMERGENT_LLM_KEY or not EMERGENT_AVAILABLE:
+        # Return a basic suggestion if AI is not available
+        return {
+            "title": request.context[:60],
+            "description": "Task created from your description",
+            "difficulty": 2,
+            "estimated_minutes": 30,
+            "skill_tree": request.skill_tree or "General"
+        }
     
     system_message = """You are a task creation assistant for a gamified productivity app.
 Based on the user's context, suggest a specific, actionable task.
