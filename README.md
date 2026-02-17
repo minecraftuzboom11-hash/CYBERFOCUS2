@@ -12,7 +12,7 @@ A full-stack gamified productivity application with XP system, achievements, AI 
 ## Features
 
 - 🎮 XP & Level System with animations
-- ✅ Task Management with difficulty ratings
+- ✅ Task Management with AI suggestions
 - ⚔️ Daily Boss Challenges
 - 🤖 AI Coach for productivity tips
 - 🎯 Focus Mode (Pomodoro timer)
@@ -20,7 +20,40 @@ A full-stack gamified productivity application with XP system, achievements, AI 
 - 🏆 Achievements System
 - 📚 Learning Hub
 - 🎵 Study Music Player
-- 🛡️ Admin Panel
+- 🛡️ Admin Panel (Login: Rebadion / Rebadion2010)
+
+## Render Deployment (Single Web Service)
+
+### Quick Deploy
+
+1. Fork/clone this repository to GitHub
+2. Go to [Render Dashboard](https://dashboard.render.com)
+3. Click **New** → **Web Service**
+4. Connect your GitHub repository
+5. Configure:
+   - **Name**: `cyberfocus` (or your choice)
+   - **Root Directory**: Leave empty (uses root)
+   - **Environment**: `Python 3`
+   - **Build Command**: `chmod +x build.sh && ./build.sh`
+   - **Start Command**: `chmod +x start.sh && ./start.sh`
+
+6. Add Environment Variables:
+   | Key | Value |
+   |-----|-------|
+   | `MONGO_URL` | Your MongoDB connection string |
+   | `DB_NAME` | `cyberfocus` |
+   | `JWT_SECRET` | Click "Generate" for random value |
+   | `CORS_ORIGINS` | `*` |
+
+7. Click **Create Web Service**
+
+### MongoDB Setup (Free Tier)
+
+1. Go to [MongoDB Atlas](https://www.mongodb.com/atlas)
+2. Create free account and cluster
+3. Create database user with password
+4. Whitelist IP: `0.0.0.0/0` (allow from anywhere)
+5. Get connection string: `mongodb+srv://username:password@cluster.mongodb.net/cyberfocus`
 
 ## Local Development
 
@@ -40,76 +73,40 @@ yarn install
 yarn start
 ```
 
-## Render Deployment
-
-### Option 1: Blueprint Deployment
-
-1. Fork this repository
-2. Connect your GitHub to Render
-3. Create a new Blueprint and select this repo
-4. Render will automatically deploy using `render.yaml`
-
-### Option 2: Manual Deployment
-
-#### Backend Service
-
-1. Create a new **Web Service** on Render
-2. Connect your repository
-3. Configure:
-   - **Root Directory**: `backend`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn server:app --host 0.0.0.0 --port $PORT`
-4. Add Environment Variables:
-   - `MONGO_URL`: Your MongoDB connection string
-   - `JWT_SECRET`: A secure random string
-   - `EMERGENT_LLM_KEY`: Your Emergent LLM API key (optional)
-   - `CORS_ORIGINS`: Your frontend URL
-
-#### Frontend Service
-
-1. Create a new **Static Site** on Render
-2. Connect your repository
-3. Configure:
-   - **Root Directory**: `frontend`
-   - **Build Command**: `yarn install && yarn build`
-   - **Publish Directory**: `build`
-4. Add Environment Variables:
-   - `REACT_APP_BACKEND_URL`: Your backend service URL
-
 ## Environment Variables
 
-### Backend (.env)
+### Required for Production
 
 ```
-MONGO_URL=mongodb+srv://...
+MONGO_URL=mongodb+srv://user:pass@cluster.mongodb.net/cyberfocus
 DB_NAME=cyberfocus
 JWT_SECRET=your-secret-key
-EMERGENT_LLM_KEY=sk-emergent-...
-CORS_ORIGINS=https://your-frontend.onrender.com
+CORS_ORIGINS=*
 ```
 
-### Frontend (.env)
+### Optional (for AI features)
 
 ```
-REACT_APP_BACKEND_URL=https://your-backend.onrender.com
+EMERGENT_LLM_KEY=sk-emergent-your-key
 ```
 
 ## Admin Panel
 
-Access the admin panel at `/admin` with:
-- **Username**: Rebadion
-- **Password**: Rebadion2010
+Access at `/admin`:
+- **Username**: `Rebadion`
+- **Password**: `Rebadion2010`
 
 ## API Endpoints
 
+All API routes are prefixed with `/api`:
+
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
-- `GET /api/tasks` - Get user tasks
+- `GET /api/tasks` - Get tasks
 - `POST /api/tasks` - Create task
 - `GET /api/boss-challenge/today` - Daily challenge
 - `POST /api/ai-coach/chat` - AI coaching
-- `GET /api/music` - Study music tracks
-- `GET /api/learning` - Learning content
+- `GET /api/music` - Study music
 - `GET /api/health` - Health check
 
 ## License
